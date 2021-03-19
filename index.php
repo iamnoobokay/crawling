@@ -9,7 +9,7 @@
     $form = $result->find('#frmDesktopMemberSearch');
 
     // $type_text_value = $form->find("#memberSearch_ServiceType")->contents()->slice(3)->getAttribute('value');
-    $type_text_value=2;
+    // $type_text_value=2;
     $area_of_practices_option = $form->find("#memberSearch_AreaOfPracticeId");
     $area_of_practices = $area_of_practices_option->children('option')->slice(1);
     curl_close($ch);
