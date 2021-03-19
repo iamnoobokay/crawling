@@ -42,15 +42,13 @@
         curl_close($ch);
         
         $plottings = $arrayed['mainlist'];
-        $chunked_plottings = array_chunk($plottings,40);
 
-        foreach($chunked_plottings as $chunked_plotting){
-            $url = 'https://otaus.com.au/search/getcontacts?';
-            foreach($chunked_plotting as $plotting){
-                $url = $url.'ids='.$plotting.'&';
-            }
+        foreach($plottings as $plotting){
+            // $dataToWrite = array();
+            $url = 'https://otaus.com.au/search/getcontacts?ids='.$plotting;
+
             $ch = curl_init();
-    
+        
             curl_setopt_array($ch, array(
                 CURLOPT_URL => $url,
                 CURLOPT_TIMEOUT => 30,
@@ -59,17 +57,72 @@
             curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
             $result = curl_exec($ch);
             $result = phpQuery::newDocument($result);
-            // echo($result);
-            $result_items = $result->find("div.results__item");
-            echo($result_items);
-            foreach($result_items as $result_item){
-                var_dump($result_item);
-                break;
+
+            $practice_name = $result->find(".main-contact-content")->find(".title__tag")->text();
+            $person_name = $result->find(".name")->text();
+
+            $phone;
+            if($result->find("a")->attr('target')){
+                $phone = $result->find(".main-contact-content")->find("a")->text();
             }
-            break;
+            else{
+                $phone = "N/A";
+            }
+            $phoneArray = str_split($phone,13);
+            $phone_number = str_replace(' ','',$phoneArray[0]);
+
+            $data_object = new stdClass();
+
+            $data_object->person_name = $person_name;
+            $data_object->practice_name = $practice_name;
+            // $data_object->phone_number = $phone_number;
+            fputcsv($fp,get_object_vars($data_object));
         }
-        break; 
     }
+    fclose($fp);
+    
 
     // text.txt contains all the unfiltered data scraped from the website.
+?>
+
+
+
+
+
+
+
+
+
+
+<?php 
+    // UNCOMMENT THIS BLOCK FOR SCRAPING IN CHUNKS USED TO WRITE TO TXT FILE
+
+    //     $chunked_plottings = array_chunk($plottings,40);
+
+    //     foreach($chunked_plottings as $chunked_plotting){
+    //         $url = 'https://otaus.com.au/search/getcontacts?';
+    //         foreach($chunked_plotting as $plotting){
+    //             $url = $url.'ids='.$plotting.'&';
+    //         }
+    //         $ch = curl_init();
+    
+    //         curl_setopt_array($ch, array(
+    //             CURLOPT_URL => $url,
+    //             CURLOPT_TIMEOUT => 30,
+    //         ));
+
+    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+    //         $result = curl_exec($ch);
+    //         $result = phpQuery::newDocument($result);
+    //         // echo($result);
+    //         $result_items = $result->find("div.results__item");
+    //         echo($result_items);
+    //         foreach($result_items as $result_item){
+    //             var_dump($result_item);
+    //             break;
+    //         }
+    //         break;
+    //     }
+    //     break; 
+    // }
 ?>
