@@ -1,35 +1,55 @@
-<?php 
-    require("phpQuery/phpQuery/phpQuery.php");
+<?php
+require_once './parse.php';
 
-    $ch = curl_init();
-    curl_setopt($ch,CURLOPT_URL,'https://www.otaus.com.au/find-an-ot');
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
-    $result = curl_exec($ch);
-    $result = phpQuery::newDocument($result);
-    $form = $result->find('#frmDesktopMemberSearch');
+class Scrape extends Parse{
+    var $baseUrl = 'https://www.otaus.com.au/find-an-ot';
+    var $counter = 1;
 
-    // $type_text_value = $form->find("#memberSearch_ServiceType")->contents()->slice(3)->getAttribute('value');
-    // $type_text_value=2;
-    $area_of_practices_option = $form->find("#memberSearch_AreaOfPracticeId");
-    $area_of_practices = $area_of_practices_option->children('option')->slice(1);
-    curl_close($ch);
+    function __construct(){
+        $counter = $this->counter;
+        $baseUrl = $this->baseUrl;
+        $this->getBaseUrl($baseUrl);
+    }
 
-    $fp = fopen('text.csv', 'a');
-    foreach($area_of_practices as $area){
-        $area_of_practice = $area->getAttribute('value');
-        $data = array(
-            'Distance'=>0,
-            'ServiceType'=>2,
-            'AreaOfPracticeId'=>$area_of_practice,
-            'State' => 0,
-        );
+    // This function gets the baseurl which contains ot form
+    public function getBaseUrl($counter){
+        $ch = curl_init();
+        curl_setopt($ch,CURLOPT_URL,'https://www.otaus.com.au/find-an-ot');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+        $result = curl_exec($ch);
+        $result = phpQuery::newDocument($result);
+        $form = $result->find('#frmDesktopMemberSearch');
+        $area_of_practices_option = $form->find("#memberSearch_AreaOfPracticeId");
+        $area_of_practices = $area_of_practices_option->children('option')->slice(1);
+        curl_close($ch);
 
+        $this->setOptionData($area_of_practices);
+        echo("Scraping Completed");
+    }
+
+    // This function sets the form option data
+    public function setOptionData($area_of_practices){
+        foreach($area_of_practices as $area){
+            $area_of_practice = $area->getAttribute('value');
+            $data = array(
+                'Distance'=>0,
+                'ServiceType'=>2,
+                'AreaOfPracticeId'=>$area_of_practice,
+                'State' => 0,
+            );
+            $this->getOptionData($data);
+        }
+        return;
+    }
+
+    // This function submits the form and gets the data
+    public function getOptionData($data){
         $ch = curl_init();
     
         curl_setopt_array($ch, array(
-			CURLOPT_URL => 'https://www.otaus.com.au//search/membersearchdistance',
-			CURLOPT_TIMEOUT => 30,
-			CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_URL => 'https://www.otaus.com.au//search/membersearchdistance',
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CUSTOMREQUEST => "POST",
             CURLOPT_POSTFIELDS => json_encode($data),
             CURLOPT_HTTPHEADER => array('Content-Type:application/json')
         ));
@@ -44,85 +64,34 @@
         $plottings = $arrayed['mainlist'];
 
         foreach($plottings as $plotting){
-            // $dataToWrite = array();
-            $url = 'https://otaus.com.au/search/getcontacts?ids='.$plotting;
-
-            $ch = curl_init();
-        
-            curl_setopt_array($ch, array(
-                CURLOPT_URL => $url,
-                CURLOPT_TIMEOUT => 30,
-            ));
-
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
-            $result = curl_exec($ch);
-            $result = phpQuery::newDocument($result);
-
-            $practice_name = $result->find(".main-contact-content")->find(".title__tag")->text();
-            $person_name = $result->find(".name")->text();
-
-            $phone;
-            if($result->find("a")->attr('target')){
-                $phone = $result->find(".main-contact-content")->find("a")->text();
-            }
-            else{
-                $phone = "N/A";
-            }
-            $phoneArray = str_split($phone,13);
-            $phone_number = str_replace(' ','',$phoneArray[0]);
-
-            $data_object = new stdClass();
-
-            $data_object->person_name = $person_name;
-            $data_object->practice_name = $practice_name;
-            // $data_object->phone_number = $phone_number;
-            fputcsv($fp,get_object_vars($data_object));
+            $this->getIndividualValue($plotting);
+            $this->counter++;
         }
+        return;
     }
-    fclose($fp);
+
+    // This function gets individual values and passes it to the parser
+    public function getIndividualValue($plotting){
+        // $dataToWrite = array();
+        $url = 'https://otaus.com.au/search/getcontacts?ids='.$plotting;
+
+        $ch = curl_init();
     
+        curl_setopt_array($ch, array(
+            CURLOPT_URL => $url,
+            CURLOPT_TIMEOUT => 30,
+        ));
 
-    // text.txt contains all the unfiltered data scraped from the website.
-?>
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
+        $result = curl_exec($ch);
+        $result = phpQuery::newDocument($result);
 
+        parent::__construct($result);
 
+        echo($this->counter." data scraped\n");
+        return;
+    }
+}
 
-
-
-
-
-
-
-
-<?php 
-    // UNCOMMENT THIS BLOCK FOR SCRAPING IN CHUNKS USED TO WRITE TO TXT FILE
-
-    //     $chunked_plottings = array_chunk($plottings,40);
-
-    //     foreach($chunked_plottings as $chunked_plotting){
-    //         $url = 'https://otaus.com.au/search/getcontacts?';
-    //         foreach($chunked_plotting as $plotting){
-    //             $url = $url.'ids='.$plotting.'&';
-    //         }
-    //         $ch = curl_init();
-    
-    //         curl_setopt_array($ch, array(
-    //             CURLOPT_URL => $url,
-    //             CURLOPT_TIMEOUT => 30,
-    //         ));
-
-    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
-    //         $result = curl_exec($ch);
-    //         $result = phpQuery::newDocument($result);
-    //         // echo($result);
-    //         $result_items = $result->find("div.results__item");
-    //         echo($result_items);
-    //         foreach($result_items as $result_item){
-    //             var_dump($result_item);
-    //             break;
-    //         }
-    //         break;
-    //     }
-    //     break; 
-    // }
+$scrape = new Scrape;
 ?>
