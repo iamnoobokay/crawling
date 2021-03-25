@@ -127,6 +127,7 @@ class Parse{
             };
         }
         $this->object->state = $state;
+        return;
     }
 
     // function to get city
@@ -148,9 +149,17 @@ class Parse{
         // Get Street
         $street = 'N/A';
         $streetArray = explode($city, $streetAndCity);
-        if($streetArray[0] != ' '){
-            $street = $streetArray[0];
+        $streetName = '';
+        foreach($streetArray as $array){
+            if($array != ' '){
+                $streetName = $streetName.$array;
+            }
         }
+        if($streetName != ''){
+            $street = $streetName;
+        }
+
+        // Set street and city to object
         $this->object->street = $street;
         $this->object->city = $city;
         return;
@@ -161,6 +170,7 @@ class Parse{
         $fp = fopen('text.csv', 'a');
         fputcsv($fp,get_object_vars($object));
         fclose($fp);
+        return;
     }
 }
 ?>

@@ -38,7 +38,6 @@ class Scrape extends Parse{
                 'State' => 0,
             );
             $this->getOptionData($data);
-            break;
         }
         return;
     }
