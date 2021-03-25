@@ -14,7 +14,7 @@ class Scrape extends Parse{
     // This function gets the baseurl which contains ot form
     public function getBaseUrl($counter){
         $ch = curl_init();
-        curl_setopt($ch,CURLOPT_URL,'https://www.otaus.com.au/find-an-ot');
+        curl_setopt($ch,CURLOPT_URL,$this->baseUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER,true);
         $result = curl_exec($ch);
         $result = phpQuery::newDocument($result);
@@ -38,6 +38,7 @@ class Scrape extends Parse{
                 'State' => 0,
             );
             $this->getOptionData($data);
+            break;
         }
         return;
     }
@@ -72,7 +73,6 @@ class Scrape extends Parse{
 
     // This function gets individual values and passes it to the parser
     public function getIndividualValue($plotting){
-        // $dataToWrite = array();
         $url = 'https://otaus.com.au/search/getcontacts?ids='.$plotting;
 
         $ch = curl_init();
