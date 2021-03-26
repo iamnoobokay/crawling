@@ -139,14 +139,14 @@ class Parse{
             $streetAndCity = $match[0];
         }
 
-        // Get city
+        // Get city, Cities are mainly all caps in the address string
         $city = 'N/A';
-        if(preg_match('/\w*[A-Z] ?\w*[A-Z] ?\w*/',$streetAndCity)){
-            preg_match('/\w*[A-Z] ?\w*[A-Z] ?\w*/',$streetAndCity,$match);
-            $city = $match[0];
+        if(preg_match('/[A-Z]{3,100}.*$/',$streetAndCity)){
+            preg_match('/ [A-Z]{3,100}.*$/',$streetAndCity,$match);
+            $city = trim($match[0]);
         }
 
-        // Get Street
+        // Get Street, Streets are mainly Caps and lowercase with street numbers
         $street = 'N/A';
         $streetArray = explode($city, $streetAndCity);
         $streetName = '';
@@ -156,7 +156,7 @@ class Parse{
             }
         }
         if($streetName != ''){
-            $street = $streetName;
+            $street = trim($streetName);
         }
 
         // Set street and city to object

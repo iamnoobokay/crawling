@@ -22,9 +22,28 @@ class Scrape extends Parse{
         $area_of_practices_option = $form->find("#memberSearch_AreaOfPracticeId");
         $area_of_practices = $area_of_practices_option->children('option')->slice(1);
         curl_close($ch);
-
+        $this->writeHeader();
         $this->setOptionData($area_of_practices);
         echo("Scraping Completed");
+    }
+
+    // write header to file
+    public function writeHeader(){
+        $fp=fopen('text.csv','w');
+        $header = new stdClass();
+        $header->person_name = "Person Name";
+        $header->practice_name = "Practice Name";
+        $header->phone_number = "Phone Number";
+        $header->funding_scheme = "Funding Schemes";
+        $header->area_of_practices = "Area Of Practices";
+        $header->street = "Street";
+        $header->city = "City";
+        $header->state = "State";
+        $header->postal_code = "Postal Code";
+        $header->country = "Country";
+        fputcsv($fp,get_object_vars($header));
+        fclose($fp);
+        return;
     }
 
     // This function sets the form option data
